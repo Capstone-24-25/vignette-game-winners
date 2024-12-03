@@ -1,0 +1,117 @@
+---
+title: "NFL"
+author: "christina"
+format: html
+editor: visual
+---
+
+
+```{r}
+# Install necessary packages
+install.packages("nflfastR")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("reticulate") # For Python integration
+
+# Install Keras
+install.packages("keras")
+library(keras)
+install_keras()
+
+```
+
+```{r}
+# Load required libraries
+library(nflfastR)
+library(dplyr)
+
+# Load NFL play-by-play data
+pbp <- load_pbp(2022)
+
+# Aggregate data to team-level statistics per week
+team_stats <- pbp %>%
+  filter(!is.na(epa)) %>%
+  group_by(posteam, week, season) %>%
+  summarize(
+    avg_epa = mean(epa, na.rm = TRUE),
+    total_yards = sum(yards_gained, na.rm = TRUE),
+    success_rate = mean(success, na.rm = TRUE),
+    total_points = sum(total_home_score + total_away_score),
+    .groups = "drop"
+  )
+
+# Add game outcome (win/loss) based on total points
+team_stats <- team_stats %>%
+  mutate(outcome = ifelse(total_points > lag(total_points), 1, 0)) %>%
+  na.omit() # Remove rows with NAs
+
+```
+
+```{r}
+# Create time-series data for LSTM input
+create_sequences <- function(data, sequence_length = 5) {
+  X <- list()
+  Y <- c()
+  
+  for (i in seq(sequence_length + 1, nrow(data))) {
+    X[[i - sequence_length]] <- as.matrix(data[(i - sequence_length):(i - 1), -ncol(data)])
+    Y[i - sequence_length] <- data[i, ncol(data)]
+  }
+  
+  return(list(X = array(unlist(X), dim = c(length(X), sequence_length, ncol(X[[1]]))),
+              Y = Y))
+}
+
+# Normalize features
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
+}
+
+# Select numeric columns
+numeric_cols <- sapply(team_stats, is.numeric)
+
+# Normalize only numeric columns
+team_stats[, numeric_cols] <- lapply(team_stats[, numeric_cols], normalize)
+
+
+
+# Generate sequences
+sequences <- create_sequences(team_stats, sequence_length = 5)
+
+X <- sequences$X
+Y <- sequences$Y
+
+```
+
+```{r}
+# Split data into training and testing sets
+library(keras)
+set.seed(666)
+train_indices <- sample(1:nrow(X), size = 0.8 * nrow(X))
+X_train <- X[train_indices, , ]
+Y_train <- Y[train_indices]
+X_test <- X[-train_indices, , ]
+Y_test <- Y[-train_indices]
+
+# Define the LSTM model
+model <- keras_model_sequential() %>%
+  layer_lstm(units = 50, input_shape = c(dim(X_train)[2], dim(X_train)[3])) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+# Compile the model
+model %>% compile(
+  optimizer = "adam",
+  loss = "binary_crossentropy",
+  metrics = c("accuracy")
+)
+
+# Train the model
+history <- model %>% fit(
+  X_train, Y_train,
+  epochs = 20,
+  batch_size = 32,
+  validation_split = 0.2
+)
+
+```
+
