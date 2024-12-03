@@ -1,5 +1,5 @@
-# vignette-passing-effectiveness
-Vignette on using Statistical Modeling to predict the effectiveness of a pass from a player in the NFL; created as a class project for PSTAT197A in Fall 2024
+# vignette-game-winners
+Vignette on using Statistical Modeling to predict the winning team of an NFL game; created as a class project for PSTAT197A in Fall 2024
 
 # Contributors
 
