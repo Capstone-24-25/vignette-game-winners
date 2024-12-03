@@ -3,10 +3,7 @@ Modeling to predict the effectiveness of a pass from a player in the NFL
 
 # Contributors
 
-Anshi Arora
-Joshua Charfauros
-Christina Cui
-Sean Reagan
+Anshi Arora, Joshua Charfauros, Christina Cui, Sean Reagan
 
 # Abstract
 
