@@ -7,23 +7,21 @@ Anshi Arora, Joshua Charfauros, Christina Cui, Sean Reagan
 
 # Abstract
 
-Need to determine modeling
+The objective of this vignette is to provide an overview of predictive analysis methods as applied to a NFL play-by-play data. Specifically, we will be utilizing neural net architechures for time series data to predict game winners based on data from previous seasons. In order to do this, we need to preprocess the NFLFastR dataset for time series, train a neural network to forecast binary game outcomes (win/loss), and test the effectiveness of our model. 
 
 # Repository Contents
-The following files are in the root directory:
+**The following files are in the root directory:**
 
 
-
-README.html - this overview document
+README (.md/.html) - this overview document
 
 
 Vignette (.qmd/.html) - final compiled report
 
 
+<br>
 
-
-The directory also includes the following subdirectories:
-
+**The directory also includes the following subdirectories:**
 
 
 Data - includes raw and processed data files
