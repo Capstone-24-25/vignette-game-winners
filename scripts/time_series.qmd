@@ -5,7 +5,6 @@ format: html
 editor: visual
 ---
 
-
 ```{r}
 # Install necessary packages
 install.packages("nflfastR")
@@ -114,4 +113,3 @@ history <- model %>% fit(
 )
 
 ```
-

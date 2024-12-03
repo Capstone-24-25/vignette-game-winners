@@ -1,0 +1,25 @@
+---
+title: "Josh NFLFastR NN"
+output: html_document
+date: "2024-12-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nnet)
+library(dplyr)
+library(caret)
+library(nflfastR)
+library(tidyverse)
+```
+
+
+```{r}
+games <- load_pbp(2023)
+games_filtered <- games %>% select(game_id, home_team, away_team, home_score, away_score)
+
+games_filtered$home_win <- ifelse(games_filtered$home_score > games_filtered$away_score, 1, 0)
+
+games_filtered$away_win <- ifelse(games_filtered$home_score < games_filtered$away_score, 1, 0)
+```
+
