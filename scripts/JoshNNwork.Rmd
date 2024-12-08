@@ -14,6 +14,8 @@ library(tidyverse)
 library(keras)
 library(neuralnet)
 library(tensorflow)
+library(fastDummies)
+
 set.seed(13)
 ```
 
@@ -59,8 +61,68 @@ pbp <- load_pbp(2023)
 performances <- pbp %>%
   group_by(game_id) %>%
   slice_tail(n=1)%>%
-  select(game_id, home_team, away_team, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
+  select(game_id, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
 
 games <- games %>% left_join(performances, by = 'game_id')
+
+games <- games %>%
+  select(-old_game_id, -nfl_detail_id, -pfr, -pff, -espn, -ftn, -away_qb_id, -home_qb_id, -away_qb_name, -home_qb_name, -away_coach, -home_coach, -referee, -stadium, -stadium_id, -location) 
+
+games$home_win <- ifelse(games$result > 0, 1,0)
+
+games <- games %>% 
+  arrange(home_team)
+
+#view(games)
+```
+
+Model stuff, running into problem here where too many of the columns are character, need to figure out how to deal w this, allegedly onehot coding but idrk how to do that
+
+```{r}
+features <- games %>% select(-home_win)
+labels <- games$home_win
+#onehot <- dummy_cols(features, remove_first_dummy = TRUE)
+#view(onehot)
+```
+
+```{r, eval=FALSE}
+features_scaled <- scale(onehot) # maybe dont need
+```
+
+
+
+
+Below is all chat
+```{r, eval=FALSE}
+timestep <- 5 # number of previous games taken into acc
+
+farray <- array(NA, dim = c(nrow(features) - timesteps, timesteps, ncol(features)))
+
+for (i in (timesteps + 1):nrow(features)) {
+  farray[i - timesteps, , ] <- as.matrix(features_scaled[(i - timesteps):(i - 1), ])
+}
+
+larray <- labels[(timesteps + 1):nrow(labels)]
+```
+
+```{r, eval=FALSE}
+# Define the LSTM model
+model <- keras_model_sequential() %>%
+  layer_lstm(units = 64,  # Number of LSTM units (can tune)
+            input_shape = c(timesteps, ncol(features)),  # (timesteps, features)
+            return_sequences = FALSE) %>%  # Whether to return the full sequence or just the output of the last timestep
+  layer_dense(units = 32, activation = 'relu') %>%  # Dense layer
+  layer_dense(units = 1, activation = 'sigmoid')  # Binary classification (output between 0 and 1)
+
+# Compile the model
+model %>% compile(
+  loss = 'binary_crossentropy',  # For binary classification
+  optimizer = 'adam',            # Optimizer
+  metrics = c('accuracy')        # Metrics to track during training
+)
+
+# Summary of the model
+summary(model)
+
 ```
 
