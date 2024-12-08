@@ -11,15 +11,56 @@ library(dplyr)
 library(caret)
 library(nflfastR)
 library(tidyverse)
+library(keras)
+library(neuralnet)
+library(tensorflow)
+set.seed(13)
 ```
 
-
+Need to take more columns for real model
 ```{r}
-games <- load_pbp(2023)
-games_filtered <- games %>% select(game_id, home_team, away_team, home_score, away_score)
+gamers <- load_pbp(2023)
+games_filtered <- gamers %>% select(game_id, home_team, away_team, home_score, away_score)
 
 games_filtered$home_win <- ifelse(games_filtered$home_score > games_filtered$away_score, 1, 0)
 
 games_filtered$away_win <- ifelse(games_filtered$home_score < games_filtered$away_score, 1, 0)
+
+games_filtered <- games_filtered %>% mutate_if(is.character, as.factor)
+```
+
+```{r}
+nrows <- floor(.8 * nrow(games_filtered))
+trainindex <- sample(c(1:nrow(games_filtered)), nrows)
+training <- games_filtered[trainindex,]
+testing <- games_filtered[-trainindex,]
+```
+
+```{r, eval =FALSE}
+model <- keras_model_sequential() %>%
+  layer_lstm(units = 64, input_shape = c(num_time_steps, num_features), return_sequences = TRUE) %>%  # LSTM layer with 64 units
+  layer_lstm(units = 32) %>%                        # Another LSTM layer with 32 units
+  layer_dense(units = 16, activation = 'relu') %>%   # Dense layer with 16 units and ReLU activation
+  layer_dense(units = 1, activation = 'sigmoid')     # Output layer with 1 unit for binary classification
+
+```
+
+Loading the games data, but it doesn't have quantitative metrics like EPA
+```{r}
+games <- nflreadr::load_schedules(2023)
+#games %>% filter(home_team == 'KC') %>%
+  #view()
+#names(games)
+```
+
+
+```{r}
+pbp <- load_pbp(2023)
+performances <- pbp %>%
+  group_by(game_id) %>%
+  slice_tail(n=1)%>%
+  select(game_id, home_team, away_team, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
+
+games <- games %>% left_join(performances, by = 'game_id')
 ```
 

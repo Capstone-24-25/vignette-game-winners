@@ -355,12 +355,37 @@ display: none;
 </div>
 
 
-<pre class="r"><code>games &lt;- load_pbp(2023)
-games_filtered &lt;- games %&gt;% select(game_id, home_team, away_team, home_score, away_score)
+<p>Need to take more columns for real model</p>
+<pre class="r"><code>gamers &lt;- load_pbp(2023)
+games_filtered &lt;- gamers %&gt;% select(game_id, home_team, away_team, home_score, away_score)
 
 games_filtered$home_win &lt;- ifelse(games_filtered$home_score &gt; games_filtered$away_score, 1, 0)
 
-games_filtered$away_win &lt;- ifelse(games_filtered$home_score &lt; games_filtered$away_score, 1, 0)</code></pre>
+games_filtered$away_win &lt;- ifelse(games_filtered$home_score &lt; games_filtered$away_score, 1, 0)
+
+games_filtered &lt;- games_filtered %&gt;% mutate_if(is.character, as.factor)</code></pre>
+<pre class="r"><code>nrows &lt;- floor(.8 * nrow(games_filtered))
+trainindex &lt;- sample(c(1:nrow(games_filtered)), nrows)
+training &lt;- games_filtered[trainindex,]
+testing &lt;- games_filtered[-trainindex,]</code></pre>
+<pre class="r"><code>model &lt;- keras_model_sequential() %&gt;%
+  layer_lstm(units = 64, input_shape = c(num_time_steps, num_features), return_sequences = TRUE) %&gt;%  # LSTM layer with 64 units
+  layer_lstm(units = 32) %&gt;%                        # Another LSTM layer with 32 units
+  layer_dense(units = 16, activation = &#39;relu&#39;) %&gt;%   # Dense layer with 16 units and ReLU activation
+  layer_dense(units = 1, activation = &#39;sigmoid&#39;)     # Output layer with 1 unit for binary classification</code></pre>
+<p>Loading the games data, but it doesn’t have quantitative metrics like
+EPA</p>
+<pre class="r"><code>games &lt;- nflreadr::load_schedules(2023)
+#games %&gt;% filter(home_team == &#39;KC&#39;) %&gt;%
+  #view()
+#names(games)</code></pre>
+<pre class="r"><code>pbp &lt;- load_pbp(2023)
+performances &lt;- pbp %&gt;%
+  group_by(game_id) %&gt;%
+  slice_tail(n=1)%&gt;%
+  select(game_id, home_team, away_team, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
+
+games &lt;- games %&gt;% left_join(performances, by = &#39;game_id&#39;)</code></pre>
 
 
 
