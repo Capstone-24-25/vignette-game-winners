@@ -10,11 +10,13 @@ library(tidyverse)
 library(nflfastR)
 library(caret)
 library(keras)
+library(keras3)
 library(neuralnet)
 library(nnet)
 library(dplyr)
 library(tensorflow)
 library(fastDummies)
+library(reticulate)
 
 set.seed(666)
 ```
@@ -167,13 +169,13 @@ model %>% compile(
 
 # Train the model
 # Does not run, keep showing `reticulate::py_last_error()` on my end
-history <- model %>% fit(
-  x_train, y_train,
-  epochs = 50,
-  batch_size = 32,
-  validation_split = 0.2,
-  verbose = 1
-)
+#history <- model %>% fit(
+#  x_train, y_train,
+#  epochs = 50,
+#  batch_size = 32,
+#  validation_split = 0.2,
+#  verbose = 1
+#)
 
 ```
 
