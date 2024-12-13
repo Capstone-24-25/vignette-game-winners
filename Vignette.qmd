@@ -4,6 +4,7 @@ author: "Anshi Arora, Joshua Charfauros, Christina Cui, Sean Reagan"
 format: html
 editor: visual
 ---
+
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 library(nflfastR)
 library(knitr)
@@ -11,11 +12,11 @@ library(knitr)
 
 # Introduction
 
-In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy. 
+In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy.
 
 # Overview of the NFLFastR Library and Dataset
 
-The NFLFastR Library is a package in R that provides access to detailed play-by-play data for NFL games. Statistics about every play, including yardages, player stats, game situations, win probability, down, etc., are included in the datasets. Overall information about each game (final score, precipitation, home team, weekday, etc.) is also included. 
+The NFLFastR Library is a package in R that provides access to detailed play-by-play data for NFL games. Statistics about every play, including yardages, player stats, game situations, win probability, down, etc., are included in the datasets. Overall information about each game (final score, precipitation, home team, weekday, etc.) is also included.
 
 The package includes helper functions to pull specific data. We will specifically be using the following function:
 
@@ -28,7 +29,7 @@ pbp_example <- load_pbp(2022:2024)
 kable(head(pbp_example[,c(1, 2, 4, 11, 15, 26, 13)], 5))
 ```
 
-As you can see the first few observations are different plays from the same game. 
+As you can see the first few observations are different plays from the same game.
 
 The dataset for each year's play-by-play data has 372 variables in total. The definitions for each variable can be found in the library's directory. Here is the link to look through the variables:
 
@@ -36,11 +37,11 @@ The dataset for each year's play-by-play data has 372 variables in total. The de
 
 # Objectives and Methodology
 
-The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data. 
+The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data.
 
-In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions. 
+In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions.
 
-More information on why/how time series and LSTM model were used can be found in their respective sections below. 
+More information on why/how time series and LSTM model were used can be found in their respective sections below.
 
 Here is a visualization of this vignette's methodological steps:
 
@@ -71,6 +72,8 @@ flowchart TD
 
 #### General Preprocessing
 
+NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (<https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model>). Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this,
+
 #### Why Time Series?
 
 #### Time Series Preprocessing
@@ -88,4 +91,3 @@ flowchart TD
 # Final Thoughts
 
 # References/Further Resources
-
