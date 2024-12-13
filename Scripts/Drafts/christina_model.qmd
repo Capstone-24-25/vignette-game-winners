@@ -22,9 +22,27 @@ set.seed(666)
 ```
 
 ```{r}
-nfl_data <- load_pbp(2021:2024)
+games <- nflreadr::load_schedules(2021:2024)
+pbp <- load_pbp(2023)
+performances <- pbp %>%
+  group_by(game_id) %>%
+  slice_tail(n=1)%>%
+  select(game_id, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
+
+games <- games %>% left_join(performances, by = 'game_id')
+
+games <- games %>%
+  select(-old_game_id, -nfl_detail_id, -pfr, -pff, -espn, -ftn, -away_qb_id, -home_qb_id, -away_qb_name, -home_qb_name, -away_coach, -home_coach, -referee, -stadium, -stadium_id, -location) 
+
+games$home_win <- ifelse(games$result > 0, 1,0)
+
+games <- games %>% 
+  arrange(home_team)
 ```
 
+```{r}
+nfl_data <- load_pbp(2021:2024)
+```
 
 ```{r}
 ## Logistic Regression
@@ -68,7 +86,6 @@ summary(logistic_model)
 
 ```
 
-
 ```{r}
 # Predict probabilities
 pred_probs <- predict(logistic_model, newdata = x_test, type = "response")
@@ -98,7 +115,6 @@ exp(coef(logistic_model))
 exp(confint(logistic_model))
 
 ```
-
 
 ```{r}
 
@@ -145,7 +161,7 @@ y_test <- test_data$result
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 # Convert data to matrices
 x_train <- as.matrix(x_train)
 x_test <- as.matrix(x_test)
@@ -178,4 +194,3 @@ model %>% compile(
 #)
 
 ```
-

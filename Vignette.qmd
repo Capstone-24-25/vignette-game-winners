@@ -107,6 +107,8 @@ This final graph addresses the point totals at the end of games and whether or n
 
 #### General Preprocessing
 
+NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (<https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model>). Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this,
+
 #### Why Time Series?
 
 #### Time Series Preprocessing
