@@ -23,7 +23,7 @@ set.seed(666)
 
 ```{r}
 games <- nflreadr::load_schedules(2021:2024)
-pbp <- load_pbp(2023)
+pbp <- load_pbp(2021:2024)
 performances <- pbp %>%
   group_by(game_id) %>%
   slice_tail(n=1)%>%
