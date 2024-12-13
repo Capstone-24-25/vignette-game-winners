@@ -107,11 +107,47 @@ This final graph addresses the point totals at the end of games and whether or n
 
 #### General Preprocessing
 
-NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (<https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model>). Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this,
+NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model). To access this, we use the load_schedules function from NFLFastR. 
 
-#### Why Time Series?
+{r}
+games <- nflreadr::load_schedules(2021:2024)
 
-#### Time Series Preprocessing
+Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this, we need to manipulate our play-by-play data to have single games as observations, scrape our new game-by-game data for our useful metrics, and then merge this data set with Sharpe's schedule data set. Once this is complete, we will have time series data where each time increment is one game. Breaking this down step-by-step, first load the play-by-play data, group it by game_id, and slice all but the last observation for that game.
+
+{r}
+pbp <- load_pbp(2021:2024)
+performances <- pbp %>%
+  group_by(game_id) %>%
+  slice_tail(n=1)
+
+
+At this point, our 'performances' data set is each game from the 2021-2024 seasons. Now, we will pull from 'performances,' the useful quantitative metrics we would like. Anything that says EPA means expected points added, and anything that says WPA means win percentage added.
+
+{r}
+performances <- performances%>%
+  select(game_id, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)
+
+
+Now that are 'performances' data has everything we want, we will left merge it with the 'games' data (which is Sharpe's original schedule set), and finally remove any unimportant predictors, such as names and unneeded ID's.
+
+{r}
+games <- games %>% left_join(performances, by = 'game_id')
+
+games <- games %>%
+  select(-old_game_id, -nfl_detail_id, -pfr, -pff, -espn, -ftn, -away_qb_id, -home_qb_id, -away_qb_name, -home_qb_name, -away_coach, -home_coach, -referee, -stadium, -stadium_id, -location) 
+
+games$home_win <- ifelse(games$result > 0, 1,0)
+
+games <- games %>% 
+  arrange(home_team)
+
+Finally, we have our desired data set. 'games' now has each observation as a unique NFL game from the 2021-2024 seasons, with many quantitative measures and void of the non-important predictors.
+
+Why Time Series?
+
+NFL football is an extremely complex series of human interactions. Two big factors that surely contribute to team success, are momentum and confidence. Unfortunately, these are not metrics in the NFLFastR data set, however, what we can do is observe recent behavior in the form of time series data. By incrementing our data set by NFL games, we are able to capture the temporal dependencies between weeks of the NFL season. Also with our logistic regression model, we have the opportunity to use lagged variables, which use observations from previous time steps as predictors for our current prediction. This introduces further layers of complexity to our model that would be absent without time series data.
+
+
 
 # Building & Training the LSTM Model
 
