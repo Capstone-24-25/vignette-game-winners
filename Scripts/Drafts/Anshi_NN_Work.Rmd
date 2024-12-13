@@ -5,6 +5,7 @@ date: "2024-12-13"
 output: html_document
 ---
 
+Try 1:
 My model is not working :/
 
 ```{r setup, include=FALSE}
@@ -27,7 +28,7 @@ set.seed(13)
 gamers <- load_pbp(2023)
 ```
 
-```{r}
+```{r, eval=F}
 games_filtered <- gamers %>% select(game_id, home_team, away_team, home_score, away_score, passing_yards, rushing_yards, kick_distance, posteam) 
 games_filtered$home_win <- ifelse(games_filtered$home_score > games_filtered$away_score, 1, 0)
 
@@ -44,13 +45,13 @@ home_teams <- home_teams %>% select(!posteam)
 home_teams <- home_teams %>% left_join(games_filtered2 %>% select(game_id, home_win), by = "game_id")
 ```
 
-```{r}
+```{r, eval=FALSE}
 X <- home_teams %>% select(total_passing_yards, total_rushing_yards, total_kick_distance, away_passing_yards, away_kick_distance, away_rushing_yards)
 X2 <- X[,2:7]
 Y <- home_teams %>% pull(home_win)
 ```
 
-```{r}
+```{r, eval=FALSE}
 model <- keras_model_sequential() %>%
   layer_dense(units = 64, activation = 'relu', input_shape = c(ncol(X2))) %>%
   layer_dense(units = 32, activation = 'relu') %>%
@@ -61,5 +62,12 @@ model %>% compile(
   optimizer = optimizer_adam(),
   metrics = c('accuracy')
 )
+```
+
+
+
+Try 2:
+```{r}
+
 ```
 

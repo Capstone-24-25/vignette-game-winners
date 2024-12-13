@@ -9,6 +9,9 @@ library(nflfastR)
 library(knitr)
 ```
 
+# Introduction
+
+In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy. 
 
 # Overview of the NFLFastR Library and Dataset
 
@@ -33,9 +36,15 @@ The dataset for each year's play-by-play data has 372 variables in total. The de
 
 # Objectives and Methodology
 
+The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data. 
 
+In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions. 
 
-# Steps
+More information on why/how time series and LSTM model were used can be found in their respective sections below. 
+
+Here is a visualization of this vignette's methodological steps:
+
+### Steps
 
 ```{mermaid}
 flowchart TD
@@ -58,12 +67,25 @@ flowchart TD
 
 # Exploratory Data Analysis
 
-# Preprocessing
+# Preprocessing & Time Series
+
+#### General Preprocessing
+
+#### Why Time Series?
+
+#### Time Series Preprocessing
 
 # Building & Training the LSTM Model
+
+#### LSTM Neural Network Model (Overview, Strengths, and When it is used)
+
+#### Building the Model
+
+#### Training the Model
 
 # Adjusting Model & Making Predictions on Test Set
 
 # Final Thoughts
 
-# References
+# References/Further Resources
+
