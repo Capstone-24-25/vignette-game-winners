@@ -1,0 +1,69 @@
+---
+title: "Vignette - NFL Game Outcome Prediction Modeling"
+author: "Anshi Arora, Joshua Charfauros, Christina Cui, Sean Reagan"
+format: html
+editor: visual
+---
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(nflfastR)
+library(knitr)
+```
+
+
+# Overview of the NFLFastR Library and Dataset
+
+The NFLFastR Library is a package in R that provides access to detailed play-by-play data for NFL games. Statistics about every play, including yardages, player stats, game situations, win probability, down, etc., are included in the datasets. Overall information about each game (final score, precipitation, home team, weekday, etc.) is also included. 
+
+The package includes helper functions to pull specific data. We will specifically be using the following function:
+
+load_pbp(): downloads play-by-play data for a given season (or multiple)
+
+The usage of this function to pull play-by-play data for years 2022-2024 is displayed below. A small subset of the dataframe is also shown.
+
+```{r, cache = T, message = F, warning = F}
+pbp_example <- load_pbp(2022:2024)
+kable(head(pbp_example[,c(1, 2, 4, 11, 15, 26, 13)], 5))
+```
+
+As you can see the first few observations are different plays from the same game. 
+
+The dataset for each year's play-by-play data has 372 variables in total. The definitions for each variable can be found in the library's directory. Here is the link to look through the variables:
+
+[www.nflfastr.com/articles/stats_variables.html](https://www.nflfastr.com/articles/stats_variables.html)
+
+# Objectives and Methodology
+
+
+
+# Steps
+
+```{mermaid}
+flowchart TD
+    A["Review NFLFastR Library: 
+    Get Familiar with the Functions, Structure of Data, Variables"]
+    B["Exploratory Data Analysis:
+    Looking at Trends over Time, Correlations between Variables etc."]
+    C["Data Preprocessing:
+    Cleaning, Formatting Time Series, Wrangling into 3D Array, Creating Train/Test Sets"]
+    E["Building the LSTM Neural Network Model"]
+    F["Training model and Adjusting Model based on Validation Set Results"]
+    G["Making Predictions on Test Set"]
+    A --> 
+    B --> 
+    C -->
+    E --> 
+    F -->
+    G
+```
+
+# Exploratory Data Analysis
+
+# Preprocessing
+
+# Building & Training the LSTM Model
+
+# Adjusting Model & Making Predictions on Test Set
+
+# Final Thoughts
+
+# References

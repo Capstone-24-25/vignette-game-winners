@@ -1,0 +1,65 @@
+---
+title: "Anshi_NN_Work"
+author: "Anshi Arora"
+date: "2024-12-13"
+output: html_document
+---
+
+My model is not working :/
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nnet)
+library(dplyr)
+library(caret)
+library(nflfastR)
+library(tidyverse)
+library(keras)
+library(neuralnet)
+library(tensorflow)
+library(fastDummies)
+
+set.seed(13)
+```
+
+```{r}
+# Loading dataset, selecting, columns of interest, Creating binary home_win variable
+gamers <- load_pbp(2023)
+```
+
+```{r}
+games_filtered <- gamers %>% select(game_id, home_team, away_team, home_score, away_score, passing_yards, rushing_yards, kick_distance, posteam) 
+games_filtered$home_win <- ifelse(games_filtered$home_score > games_filtered$away_score, 1, 0)
+
+# Aggregating per-play variables into totals for each game per team
+## i.e total passing/recieving yards per team in a game, total kick distance per team in a game
+per_game_stats <- games_filtered %>% group_by(game_id, posteam) %>% summarize(total_passing_yards = sum(passing_yards, na.rm = T), total_rushing_yards = sum(rushing_yards, na.rm = T), total_kick_distance = sum(kick_distance, na.rm = T)) %>% filter(!is.na(posteam))
+
+# Combining per-game stats calculated above with overall game stats(home_score, away_score), Separated stats into home/away team points
+games_filtered2 <- games_filtered[!duplicated(games_filtered$game_id), ] %>% select(game_id, home_team, away_team, home_score, away_score, home_win)
+home_teams <- per_game_stats %>% left_join(games_filtered2 %>% select(home_team, game_id), by = "game_id") %>% filter(posteam == home_team)
+away_teams <- per_game_stats %>% left_join(games_filtered2 %>% select(home_team, game_id), by = "game_id") %>% filter(posteam != home_team) %>% rename(away_passing_yards = total_passing_yards, away_rushing_yards = total_rushing_yards, away_kick_distance = total_kick_distance) 
+home_teams <- home_teams %>% left_join(away_teams %>% select(game_id, away_passing_yards, away_rushing_yards, away_kick_distance), by = "game_id")
+home_teams <- home_teams %>% select(!posteam)
+home_teams <- home_teams %>% left_join(games_filtered2 %>% select(game_id, home_win), by = "game_id")
+```
+
+```{r}
+X <- home_teams %>% select(total_passing_yards, total_rushing_yards, total_kick_distance, away_passing_yards, away_kick_distance, away_rushing_yards)
+X2 <- X[,2:7]
+Y <- home_teams %>% pull(home_win)
+```
+
+```{r}
+model <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = 'relu', input_shape = c(ncol(X2))) %>%
+  layer_dense(units = 32, activation = 'relu') %>%
+  layer_dense(units = 1, activation = 'sigmoid')
+
+model %>% compile(
+  loss = 'binary_crossentropy',  # Binary cross-entropy for binary classification
+  optimizer = optimizer_adam(),
+  metrics = c('accuracy')
+)
+```
+
