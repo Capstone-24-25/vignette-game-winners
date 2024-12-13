@@ -4,6 +4,7 @@ author: "Anshi Arora, Joshua Charfauros, Christina Cui, Sean Reagan"
 format: html
 editor: visual
 ---
+
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 library(nflfastR)
 library(knitr)
@@ -11,11 +12,11 @@ library(knitr)
 
 # Introduction
 
-In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy. 
+In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy.
 
 # Overview of the NFLFastR Library and Dataset
 
-The NFLFastR Library is a package in R that provides access to detailed play-by-play data for NFL games. Statistics about every play, including yardages, player stats, game situations, win probability, down, etc., are included in the datasets. Overall information about each game (final score, precipitation, home team, weekday, etc.) is also included. 
+The NFLFastR Library is a package in R that provides access to detailed play-by-play data for NFL games. Statistics about every play, including yardages, player stats, game situations, win probability, down, etc., are included in the datasets. Overall information about each game (final score, precipitation, home team, weekday, etc.) is also included.
 
 The package includes helper functions to pull specific data. We will specifically be using the following function:
 
@@ -28,7 +29,7 @@ pbp_example <- load_pbp(2022:2024)
 kable(head(pbp_example[,c(1, 2, 4, 11, 15, 26, 13)], 5))
 ```
 
-As you can see the first few observations are different plays from the same game. 
+As you can see the first few observations are different plays from the same game.
 
 The dataset for each year's play-by-play data has 372 variables in total. The definitions for each variable can be found in the library's directory. Here is the link to look through the variables:
 
@@ -36,11 +37,11 @@ The dataset for each year's play-by-play data has 372 variables in total. The de
 
 # Objectives and Methodology
 
-The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data. 
+The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data.
 
-In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions. 
+In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions.
 
-More information on why/how time series and LSTM model were used can be found in their respective sections below. 
+More information on why/how time series and LSTM model were used can be found in their respective sections below.
 
 Here is a visualization of this vignette's methodological steps:
 
@@ -67,6 +68,41 @@ flowchart TD
 
 # Exploratory Data Analysis
 
+```{r}
+EPA = readRDS('RDS files/EPA_2024.rds')
+EPA
+```
+
+Above is a graph displaying the teams that have the highest Offense EPA and Defense EPA. Here we are looking for the teams in the top right quadrant of the graph which means that they have a negative Defense EPA (take points from their opponent) and a positive Offense EPA (add points to their own team). The top teams by this metric are the Bills, 49ers, Chiefs, and Eagles which were all really good teams during this time period.
+
+```{r}
+LV_vs_ACT = readRDS('RDS files/LV_vs_Act.rds')
+LV_vs_ACT
+```
+
+Another interesting component to look at is the type of stadium that the teams are playing in. Home teams are favored by both Vegas and their actual results when playing in a dome or outdoors. This advantage flips the other way for closed or open stadiums. For some reason, stadiums with retractable roofs make it less likely for their home team to take home a win.
+
+```{r, warning=FALSE}
+ptdiff = readRDS('RDS files/pt_diff.rds')
+ptdiff
+```
+
+This chart is attempting to see the strength of point differential on wins. With the chart, we can see that most teams that have a positive point differential go on to win 8 or more games. This would make sense as those teams are at least even in game or have a positive record. Some outliers from the positive side of win percentage drop down below 0 in the point differential category. This means that the relationship between number of wins and point differential is not 1-to-1.
+
+```{r warning=FALSE}
+QB_eff = readRDS('RDS files/QB_efficiency.rds')
+QB_eff
+```
+
+Here is a graph about quarterback efficiency. Notice anything? Those same teams as before populate our top spots. Teams like the Chiefs, 49ers, Bills, and Eagles have the most efficient or near the most efficient quarterbacks in the entire league. This proves to be another good indicator of a teams overall success. Which is good quarterback play.
+
+```{r}
+Total_wp = readRDS('RDS files/Stacked_Total.rds')
+Total_wp
+```
+
+This final graph addresses the point totals at the end of games and whether or not the home team is favored based off of that. From the stacked bar chart we can see that the home team is always favored. However, for relatively low or high scoring point totals, that advantage drops slightly. Games that fall within the 38-49 point total typically favor the home team a little bit more than usual.
+
 # Preprocessing & Time Series
 
 #### General Preprocessing
@@ -88,4 +124,3 @@ flowchart TD
 # Final Thoughts
 
 # References/Further Resources
-
