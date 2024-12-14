@@ -77,20 +77,19 @@ flowchart TD
 
 Below is a graph displaying the teams that have the highest Offense EPA (Expected Points Added) and Defense EPA. Here we are looking for the teams in the top right quadrant of the graph which means that they have a negative Defense EPA (take points from their opponent) and a positive Offense EPA (add points to their own team). The top teams by this metric are the Bills, 49ers, Chiefs, and Eagles which were all really good teams during this time period.
 
-
 ```{r, cache=TRUE}
 EPA <- readRDS('RDS files/EPA_2024.rds')
 EPA
 ```
-Another interesting component to look at is the type of stadium that the teams are playing in. Home teams are favored by both Vegas and their actual results when playing in a dome or outdoors. This advantage flips the other way for closed or open stadiums. For some reason, stadiums with retractable roofs make it less likely for their home team to take home a win.
 
+Another interesting component to look at is the type of stadium that the teams are playing in. Home teams are favored by both Vegas and their actual results when playing in a dome or outdoors. This advantage flips the other way for closed or open stadiums. For some reason, stadiums with retractable roofs make it less likely for their home team to take home a win.
 
 ```{r, cache = T}
 LV_vs_ACT = readRDS('RDS files/LV_vs_Act.rds')
 LV_vs_ACT
 ```
-This following chart is attempting to see the strength of point differential on wins. With the chart, we can see that most teams that have a positive point differential go on to win 8 or more games. This would make sense as those teams are at least even in game or have a positive record. Some outliers from the positive side of win percentage drop down below 0 in the point differential category. This means that the relationship between number of wins and point differential is not 1-to-1.
 
+This following chart is attempting to see the strength of point differential on wins. With the chart, we can see that most teams that have a positive point differential go on to win 8 or more games. This would make sense as those teams are at least even in game or have a positive record. Some outliers from the positive side of win percentage drop down below 0 in the point differential category. This means that the relationship between number of wins and point differential is not 1-to-1.
 
 ```{r, warning=FALSE, cache=TRUE}
 ptdiff = readRDS('RDS files/pt_diff.rds')
@@ -99,13 +98,12 @@ ptdiff
 
 Here is a graph about quarterback efficiency. Notice anything? Those same teams as before populate our top spots. Teams like the Chiefs, 49ers, Bills, and Eagles have the most efficient or near the most efficient quarterbacks in the entire league. This proves to be another good indicator of a teams overall success. Which is good quarterback play.
 
-
 ```{r warning=FALSE, cache=TRUE}
 QB_eff = readRDS('RDS files/QB_efficiency.rds')
 QB_eff
 ```
-This final graph addresses the point totals at the end of games and whether or not the home team is favored based off of that. From the stacked bar chart we can see that the home team is always favored. However, for relatively low or high scoring point totals, that advantage drops slightly. Games that fall within the 38-49 point total typically favor the home team a little bit more than usual.
 
+This final graph addresses the point totals at the end of games and whether or not the home team is favored based off of that. From the stacked bar chart we can see that the home team is always favored. However, for relatively low or high scoring point totals, that advantage drops slightly. Games that fall within the 38-49 point total typically favor the home team a little bit more than usual.
 
 ```{r, cache=TRUE}
 Total_wp = readRDS('RDS files/Stacked_Total.rds')
@@ -125,7 +123,8 @@ games <- nflreadr::load_schedules(2021:2024)
 Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this, we need to manipulate our play-by-play data to have single games as observations, scrape our new game-by-game data for our useful metrics, and then merge this data set with Sharpe's schedule data set. Once this is complete, we will have time series data where each time increment is one game. Breaking this down step-by-step, first load the play-by-play data, group it by game_id, and slice all but the last observation for that game.
 
 ```{r, eval=FALSE}
-pbp <- load_pbp(2021:2024) performances <- pbp %>% group_by(game_id) %>% slice_tail(n=1)
+pbp <- load_pbp(2021:2024) 
+performances <- pbp %>% group_by(game_id) %>% slice_tail(n=1)
 ```
 
 At this point, our 'performances' data set is each game from the 2021-2024 seasons. Now, we will pull from 'performances,' the useful quantitative metrics we would like. Anything that says EPA means expected points added, and anything that says WPA means win percentage added.
