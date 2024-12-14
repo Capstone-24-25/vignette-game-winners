@@ -358,6 +358,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Predictive Modeling</h1>
 <section id="overview-of-random-forests" class="level4">
 <h4 class="anchored" data-anchor-id="overview-of-random-forests">Overview of Random Forests</h4>
+<p>A Random forest is a collection of binary classification trees. A large number of trees are built using random bootstrap samples and subsets of predictor (x) variables. Each of these trees classifies the the data and a majority vote is taken across the forest to reach the final conclusion.</p>
 </section>
 <section id="building-the-rf-model" class="level4">
 <h4 class="anchored" data-anchor-id="building-the-rf-model">Building the RF Model</h4>
@@ -454,6 +455,7 @@ Prediction  0  1
 </section>
 <section id="variable-importance-scores" class="level1">
 <h1>Variable Importance Scores</h1>
+<p>Variable Importance scores measure the average change in node-homogenity, entropy, or DecreaseAccuracy across all nodes associated with a given predictor. This provides a measure of how important the predictor is in the end decision.</p>
 <p>We can calculate these scores for the model to identify the variables that play the largest role in the prediction.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract feature importance</span></span>

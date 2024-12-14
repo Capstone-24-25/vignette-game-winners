@@ -178,6 +178,8 @@ games <- games %>%
 
 #### Overview of Random Forests
 
+A Random forest is a collection of binary classification trees. A large number of trees are built using random bootstrap samples and subsets of predictor (x) variables. Each of these trees classifies the the data and a majority vote is taken across the forest to reach the final conclusion. 
+
 #### Building the RF Model
 
 First, we want to begin by splitting the data into train and test sets. Then, we split each train and test set into its predictor and target variables. 
@@ -241,6 +243,7 @@ Again, the confusion matrix shows that most games were corectly predicted to be 
 
 # Variable Importance Scores
 
+Variable Importance scores measure the average change in node-homogenity, entropy, or DecreaseAccuracy across all nodes associated with a given predictor. This provides a measure of how important the predictor is in the end decision. 
 
 We can calculate these scores for the model to identify the variables that play the largest role in the prediction. 
 
