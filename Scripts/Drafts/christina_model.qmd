@@ -162,22 +162,17 @@ importance_df <- importance_df %>%
 ```
 
 ```{r}
-library(ggplot2)
+# Create a data frame from the importance object with feature names
+importance_df <- as.data.frame(importance)
 
-ggplot(importance_df, aes(x = reorder(Feature, MeanDecreaseAccuracy), y = MeanDecreaseAccuracy)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  coord_flip() +
-  labs(
-    title = "Feature Importance (Random Forest)",
-    x = "Features",
-    y = "Mean Decrease in Accuracy"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(size = 10),
-    axis.title = element_text(size = 12),
-    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
-  )
+# Add feature names as a proper column
+importance_df$Feature <- rownames(importance_df)
+
+# Reset row names to avoid confusion
+rownames(importance_df) <- NULL
+
+# Verify the structure of the data
+head(importance_df)
 
 ```
 
@@ -212,11 +207,10 @@ ggplot(top_features, aes(x = reorder(Feature, MeanDecreaseAccuracy), y = MeanDec
 
 
 ```{r}
-# Convert x_train to a data frame
-x_train_df <- as.data.frame(x_train_matrix)
 
-# Similarly for x_test
-x_test_df <- as.data.frame(x_test_matrix)
+# Ensure x_train and x_test are data frames
+x_train_df <- as.data.frame(x_train)
+x_test_df <- as.data.frame(x_test)
 
 ```
 
@@ -255,23 +249,50 @@ class(y_train)  # Should return "factor"
 
 ```
 
+```{r}
+# Check dimensions
+nrow(x_train_df) == length(y_train)  # Should return TRUE
 
+```
+
+```{r}
+# Check for conflicts
+# conflicts()
+
+# Explicitly use caret's train function
+tuned_rf_model <- caret::train(
+  x = x_train_df,
+  y = y_train,        # Ensure this is a factor
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 5
+)
+
+```
 
 
 ```{r}
-
-
-# Train with hyperparameter tuning
-tuned_rf_model <- train(
-  x = x_train,
-  y = factor(y_train),
-  method = "rf",
-  trControl = train_control,
-  tuneLength = 5         # Number of tuning parameter combinations to try
-)
-
 # Print tuned model results
 print(tuned_rf_model)
+
+```
+
+```{r}
+# Predict on the test set
+rf_predictions <- predict(tuned_rf_model, newdata = x_test_df)
+
+# Evaluate the predictions
+conf_matrix <- confusionMatrix(rf_predictions, y_test)
+print(conf_matrix)
+
+```
+
+```{r}
+# Feature importance
+varImp <- varImp(tuned_rf_model)
+
+# Plot feature importance
+plot(varImp, top = 20, main = "Top 20 Feature Importance (Random Forest)")
 
 ```
 
