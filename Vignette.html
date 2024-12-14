@@ -108,7 +108,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of neural networks to this field is still being developed. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a neural network model that can forecast the winner of an NFL game with a high degree of accuracy.</p>
+<p>In the NFL world, predicting game outcomes is a highly sought after accomplishment for a wide range of stakeholders like teams, analysts, fans, etc. A wide variety of approaches and methods have been utilized in sports forecasting but the application of random forests to this field is not a widespread practice. By leveraging historical play-by-play data, which includes detailed information on team performance, player actions, game context, and situational factors, we aim to build a model that can forecast the winner of an NFL game with a high degree of accuracy.</p>
 </section>
 <section id="overview-of-the-nflfastr-library-and-dataset" class="level1">
 <h1>Overview of the NFLFastR Library and Dataset</h1>
@@ -197,9 +197,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="objectives-and-methodology" class="level1">
 <h1>Objectives and Methodology</h1>
-<p>The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played. Furthermore, we want to consider both long and short term trends and characteristics in their playing data.</p>
-<p>In order to do this, we will begin by preproccesing our play-by-play data into a time series format where multiple consecutive games make up the sequence. To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a neural network (specifically a LSTM) model on this time series data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues like overfitting. Finally, this model can be used to make predictions.</p>
-<p>More information on why/how time series and LSTM model were used can be found in their respective sections below.</p>
+<p>The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played.</p>
+<p>To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a random forest model on the data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues that arise. Finally, this model can be used to make predictions.</p>
+<p>More information on why/how random forests were used can be found in their respective sections below.</p>
 <p>Here is a visualization of this vignette’s methodological steps:</p>
 <section id="steps" class="level3">
 <h3 class="anchored" data-anchor-id="steps">Steps</h3>
@@ -214,16 +214,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     B["Exploratory Data Analysis:
     Looking at Trends over Time, Correlations between Variables etc."]
     C["Data Preprocessing:
-    Cleaning, Formatting Time Series, Wrangling into 3D Array, Creating Train/Test Sets"]
-    E["Building the LSTM Neural Network Model"]
-    F["Training model and Adjusting Model based on Validation Set Results"]
-    G["Making Predictions on Test Set"]
+    Cleaning, Formatting, Choosing Variables, Creating Train/Test Sets"]
+    E["Building &amp; Training the Random Forest Model"]
+    F["Testing model &amp; Calculating Accuracy"]
+    G["Evaluate Variable Importance Scores and Adjust RF Model"]
+    H["Retrain Model and Calculate Test Accuracy"]
     A --&gt; 
     B --&gt; 
     C --&gt;
     E --&gt; 
     F --&gt;
-    G
+    G --&gt;
+    H
 </pre>
 </div>
 <p></p></figure><p></p>
@@ -298,17 +300,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="preprocessing-time-series" class="level1">
-<h1>Preprocessing &amp; Time Series</h1>
-<section id="general-preprocessing" class="level4">
-<h4 class="anchored" data-anchor-id="general-preprocessing">General Preprocessing</h4>
-<p>NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model). To access this, we use the load_schedules function from NFLFastR.</p>
+<section id="preprocessing" class="level1">
+<h1>Preprocessing</h1>
+<p>NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article <a href="https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model">https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model</a>. To access this, we use the load_schedules function from NFLFastR.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> nflreadr<span class="sc">::</span><span class="fu">load_schedules</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Sharpe’s set, however, captures a lot of data we don’t need, things like quarterback and coach name etc, and doesn’t capture plenty of things we do care about, such as quantitative performance metrics. To solve this, we need to manipulate our play-by-play data to have single games as observations, scrape our new game-by-game data for our useful metrics, and then merge this data set with Sharpe’s schedule data set. Once this is complete, we will have time series data where each time increment is one game. Breaking this down step-by-step, first load the play-by-play data, group it by game_id, and slice all but the last observation for that game.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pbp <span class="ot">&lt;-</span> <span class="fu">load_pbp</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>) performances <span class="ot">&lt;-</span> pbp <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(game_id) <span class="sc">%&gt;%</span> <span class="fu">slice_tail</span>(<span class="at">n=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pbp <span class="ot">&lt;-</span> <span class="fu">load_pbp</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>) </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>performances <span class="ot">&lt;-</span> pbp <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(game_id) <span class="sc">%&gt;%</span> <span class="fu">slice_tail</span>(<span class="at">n=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>At this point, our ‘performances’ data set is each game from the 2021-2024 seasons. Now, we will pull from ‘performances,’ the useful quantitative metrics we would like. Anything that says EPA means expected points added, and anything that says WPA means win percentage added.</p>
 <div class="cell">
@@ -325,26 +326,253 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(home_team)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Finally, we have our desired data set. ‘games’ now has each observation as a unique NFL game from the 2021-2024 seasons, with many quantitative measures and void of the non-important predictors.</p>
+<p>We then want to get rid of any missing data throughout the dataset. The visualization below can help us identify where and how many NA’s are in the dataframe.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vis_miss</span>(games)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can then go ahead and remove the rows with missing values</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Specifically check the `home_win` column</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(games<span class="sc">$</span>home_win))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 63</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove Rows with Missing Values</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(.), <span class="fu">mean</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>), .)))</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.factor), <span class="sc">~</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(.), <span class="st">"Unknown"</span>, .)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
-<section id="why-time-series" class="level3">
-<h3 class="anchored" data-anchor-id="why-time-series">Why Time Series?</h3>
-<p>NFL football is an extremely complex series of human interactions. Two big factors that surely contribute to team success, are momentum and confidence. Unfortunately, these are not metrics in the NFLFastR data set, however, what we can do is observe recent behavior in the form of time series data. By incrementing our data set by NFL games, we are able to capture the temporal dependencies between weeks of the NFL season. Also with our logistic regression model, we have the opportunity to use lagged variables, which use observations from previous time steps as predictors for our current prediction. This introduces further layers of complexity to our model that would be absent without time series data.</p>
+<section id="predictive-modeling" class="level1">
+<h1>Predictive Modeling</h1>
+<section id="overview-of-random-forests" class="level4">
+<h4 class="anchored" data-anchor-id="overview-of-random-forests">Overview of Random Forests</h4>
+</section>
+<section id="building-the-rf-model" class="level4">
+<h4 class="anchored" data-anchor-id="building-the-rf-model">Building the RF Model</h4>
+<p>First, we want to begin by splitting the data into train and test sets. Then, we split each train and test set into its predictor and target variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the dataset into training and testing sets</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>train_index <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(games<span class="sc">$</span>home_win, <span class="at">p =</span> <span class="fl">0.8</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> games[train_index, ]</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> games[<span class="sc">-</span>train_index, ]</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Separate predictors and target variable</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>x_train <span class="ot">&lt;-</span> train_data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>home_win, <span class="sc">-</span>result)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>y_train <span class="ot">&lt;-</span> train_data<span class="sc">$</span>home_win</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>x_test <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>home_win, <span class="sc">-</span>result)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>y_test <span class="ot">&lt;-</span> test_data<span class="sc">$</span>home_win</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can then train the Random Forest model on this data. We will be using 100 trees for our forest. This can be adjusted later if needed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train the Random Forest model</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> x_train,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> <span class="fu">factor</span>(y_train), <span class="co"># Target variable as factor</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ntree =</span> <span class="dv">100</span>,         <span class="co"># Number of trees</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">importance =</span> <span class="cn">TRUE</span>,   <span class="co"># Calculate feature importance</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">proximity =</span> <span class="cn">TRUE</span>     <span class="co"># Proximity measure (optional, useful for visualization)</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># View the model summary</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+ randomForest(x = x_train, y = factor(y_train), ntree = 100, importance = TRUE,      proximity = TRUE) 
+               Type of random forest: classification
+                     Number of trees: 100
+No. of variables tried at each split: 7
+
+        OOB estimate of  error rate: 1.48%
+Confusion matrix:
+    0   1 class.error
+0 215   2  0.00921659
+1   5 251  0.01953125</code></pre>
+</div>
+</div>
+<p>As we can se by the model summary, the random forest is a good prediction model for this dataset. The confusion matrix presents extremely low error rates. This can be shown as most game outcomes were predicted correctly (all except 7).</p>
+</section>
+<section id="testing-and-accuracy" class="level4">
+<h4 class="anchored" data-anchor-id="testing-and-accuracy">Testing and Accuracy</h4>
+<p>We can then apply this model to the test set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict on the test data</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>rf_predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf_model, <span class="at">newdata =</span> x_test)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Confusion Matrix</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>conf_matrix <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(rf_predictions), </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(y_test), </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">positive =</span> <span class="st">"1"</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(conf_matrix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction  0  1
+         0 39  3
+         1  1 75
+                                          
+               Accuracy : 0.9661          
+                 95% CI : (0.9155, 0.9907)
+    No Information Rate : 0.661           
+    P-Value [Acc &gt; NIR] : 3.467e-16       
+                                          
+                  Kappa : 0.9253          
+                                          
+ Mcnemar's Test P-Value : 0.6171          
+                                          
+            Sensitivity : 0.9615          
+            Specificity : 0.9750          
+         Pos Pred Value : 0.9868          
+         Neg Pred Value : 0.9286          
+             Prevalence : 0.6610          
+         Detection Rate : 0.6356          
+   Detection Prevalence : 0.6441          
+      Balanced Accuracy : 0.9683          
+                                          
+       'Positive' Class : 1               
+                                          </code></pre>
+</div>
+</div>
+<p>Again, the confusion matrix shows that most games were corectly predicted to be either win/loss (all except 4). This is reflected in the accuracy score which is .9661. The other statisticcs also support the conclusion that this is a solid model.</p>
 </section>
 </section>
-<section id="building-training-the-lstm-model" class="level1">
-<h1>Building &amp; Training the LSTM Model</h1>
-<section id="lstm-neural-network-model-overview-strengths-and-when-it-is-used" class="level4">
-<h4 class="anchored" data-anchor-id="lstm-neural-network-model-overview-strengths-and-when-it-is-used">LSTM Neural Network Model (Overview, Strengths, and When it is used)</h4>
+<section id="variable-importance-scores" class="level1">
+<h1>Variable Importance Scores</h1>
+<p>We can calculate these scores for the model to identify the variables that play the largest role in the prediction.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract feature importance</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>importance <span class="ot">&lt;-</span> <span class="fu">importance</span>(rf_model)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>importance_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(importance)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove columns with NA names</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>importance_df <span class="ot">&lt;-</span> importance_df[, <span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">colnames</span>(importance_df))]</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort by MeanDecreaseAccuracy</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>importance_df <span class="ot">&lt;-</span> importance_df <span class="sc">%&gt;%</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(MeanDecreaseAccuracy))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a data frame from the importance object with feature names</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>importance_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(importance)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Add feature names as a proper column</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>importance_df<span class="sc">$</span>Feature <span class="ot">&lt;-</span> <span class="fu">rownames</span>(importance_df)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset row names to avoid confusion</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(importance_df) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Limit the number of features to top 20 for better visibility</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>top_features <span class="ot">&lt;-</span> importance_df <span class="sc">%&gt;%</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">top_n</span>(<span class="dv">20</span>, <span class="at">wt =</span> MeanDecreaseAccuracy)</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_features, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Feature, MeanDecreaseAccuracy), <span class="at">y =</span> MeanDecreaseAccuracy)) <span class="sc">+</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span>  <span class="co"># Flip axes for better readability</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Feature Importance (Random Forest)"</span>,</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Features"</span>,</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Mean Decrease in Accuracy"</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),  <span class="co"># Increase y-axis font size</span></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The graph above shows the top 20 predictors with the highest variable importance scores. One potential method of improving the model would be to limit the predictors to decrease the complexity of the model without significantly impacting the accuracy.</p>
 </section>
-<section id="building-the-model" class="level4">
-<h4 class="anchored" data-anchor-id="building-the-model">Building the Model</h4>
-</section>
-<section id="training-the-model" class="level4">
-<h4 class="anchored" data-anchor-id="training-the-model">Training the Model</h4>
-</section>
-</section>
-<section id="adjusting-model-making-predictions-on-test-set" class="level1">
-<h1>Adjusting Model &amp; Making Predictions on Test Set</h1>
+<section id="adjusting-the-initial-model" class="level1">
+<h1>Adjusting the Initial Model</h1>
+<p>We then build on the previous model and use a more developed method of building and training the random forest. This model uses training control. This involves cross-validation, 5 folds, and random search for hyperparameters. We then use the train function from the caret library.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure x_train and x_test are data frames</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>x_train_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(x_train)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>x_test_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(x_test)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure y_train is a factor</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>y_train <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(y_train)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure y_test is a factor</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>y_test <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(y_test)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Define training control</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>train_control <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"cv"</span>,        <span class="co"># Cross-validation</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">number =</span> <span class="dv">5</span>,           <span class="co"># Number of folds</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">search =</span> <span class="st">"random"</span>     <span class="co"># Random search for hyperparameters</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Explicitly use caret's train function</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>tuned_rf_model <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">train</span>(</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> x_train_df,</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> y_train,        <span class="co"># Ensure this is a factor</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"rf"</span>,</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">trControl =</span> train_control,</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">tuneLength =</span> <span class="dv">5</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Print tuned model results</span></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(tuned_rf_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Random Forest 
+
+473 samples
+ 55 predictor
+  2 classes: '0', '1' 
+
+No pre-processing
+Resampling: Cross-Validated (5 fold) 
+Summary of sample sizes: 377, 379, 379, 379, 378 
+Resampling results across tuning parameters:
+
+  mtry  Accuracy   Kappa    
+   8    0.9830678  0.9658901
+  40    0.9809183  0.9615539
+  43    0.9809183  0.9615539
+  52    0.9809183  0.9615539
+
+Accuracy was used to select the optimal model using the largest value.
+The final value used for the model was mtry = 8.</code></pre>
+</div>
+</div>
+<p>As we can see this model increases the accuracy of the previous model to .983. The Graph below shows the variable/feature importance scores. As you can notice, many of the variables with high importance scores are common between this model and the previous one.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Feature importance</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>varImp <span class="ot">&lt;-</span> <span class="fu">varImp</span>(tuned_rf_model)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot feature importance</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(varImp, <span class="at">top =</span> <span class="dv">20</span>, <span class="at">main =</span> <span class="st">"Top 20 Feature Importance (Random Forest)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
 <section id="final-thoughts" class="level1">
 <h1>Final Thoughts</h1>
