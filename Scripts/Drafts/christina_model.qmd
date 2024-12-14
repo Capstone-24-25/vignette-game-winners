@@ -128,11 +128,138 @@ varImpPlot(rf_model)
 ```
 
 ```{r}
-# Define the training control
+library(ggplot2)
+
+# Extract feature importance
+importance <- importance(rf_model)
+importance_df <- as.data.frame(importance)
+```
+
+
+```{r}
+# Check column names
+colnames(importance_df)
+
+```
+
+```{r}
+# Remove columns with NA names
+importance_df <- importance_df[, !is.na(colnames(importance_df))]
+
+```
+
+```{r}
+# Check column names after removal
+colnames(importance_df)
+
+```
+
+```{r}
+# Sort by MeanDecreaseAccuracy
+importance_df <- importance_df %>%
+  arrange(desc(MeanDecreaseAccuracy))
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(importance_df, aes(x = reorder(Feature, MeanDecreaseAccuracy), y = MeanDecreaseAccuracy)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Feature Importance (Random Forest)",
+    x = "Features",
+    y = "Mean Decrease in Accuracy"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
+  )
+
+```
+
+
+```{r}
+# Limit the number of features to top 20 for better visibility
+top_features <- importance_df %>%
+  top_n(20, wt = MeanDecreaseAccuracy)
+
+# Create the improved plot with ggplot2
+library(ggplot2)
+
+ggplot(top_features, aes(x = reorder(Feature, MeanDecreaseAccuracy), y = MeanDecreaseAccuracy)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +  # Flip axes for better readability
+  labs(
+    title = "Top 20 Feature Importance (Random Forest)",
+    x = "Features",
+    y = "Mean Decrease in Accuracy"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 10),  # Increase y-axis font size
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold")
+  )
+
+```
+
+
+
+
+
+```{r}
+# Convert x_train to a data frame
+x_train_df <- as.data.frame(x_train_matrix)
+
+# Similarly for x_test
+x_test_df <- as.data.frame(x_test_matrix)
+
+```
+
+```{r}
+# Ensure y_train is a factor
+y_train <- as.factor(y_train)
+
+# Ensure y_test is a factor
+y_test <- as.factor(y_test)
+
+```
+
+
+```{r}
+
+# Define training control
 train_control <- trainControl(
   method = "cv",        # Cross-validation
-  number = 5            # Number of folds
+  number = 5,           # Number of folds
+  search = "random"     # Random search for hyperparameters
 )
+
+
+```
+
+
+```{r}
+# Check class of x_train_df
+class(x_train_df)  # Should return "data.frame"
+
+# Check for missing values
+sum(is.na(x_train_df))  # Should return 0
+
+# Check class of y_train
+class(y_train)  # Should return "factor"
+
+```
+
+
+
+
+```{r}
+
 
 # Train with hyperparameter tuning
 tuned_rf_model <- train(
