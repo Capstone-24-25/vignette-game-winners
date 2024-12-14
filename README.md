@@ -14,28 +14,20 @@ To determine which variables have strong correlations with game win, and thereby
 # Repository Contents
 **The following files are in the root directory:**
 
+- `README (.md/.html)` this overview document
+- `Vignette (.qmd/.html)` final compiled report
+- `Vignette_cache` supplementary folder aids in rendering of vignette.qmd
+- `Vignette_files` supplementary folder aids in rendering of vignette.qmd
+- `Scripts`
+  - `Drafts` subdirectory with drafts from each contributer
+  - `Vignette.R` final compiled script
+- `RDS files` includes RDS files created in Exploratory Data Analysis, aid in rendering of graphs in vignette.qmd
+- `Figures` graphs and figures stored as png's
+- `Data` raw preprocessed csv
 
-README (.md/.html) - this overview document
-
-
-Vignette (.qmd/.html) - final compiled report
-
-
-<br>
-
-**The directory also includes the following subdirectories:**
-
-
-Data - includes raw and processed data files
-
-
-Scripts - includes a subdirectory with drafts from each contributor and a final compiled script named "vignette-script"
-
-
-Figures - Any graphs and figures created stored as png's
 
 # Reference List
 https://www.nflfastr.com/index.html
-
-
 https://nflreadr.nflverse.com/
+https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model
+www.nflfastr.com/articles/stats_variables.html
