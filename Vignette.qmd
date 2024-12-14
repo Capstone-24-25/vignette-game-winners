@@ -50,9 +50,9 @@ The dataset for each year's play-by-play data has 372 variables in total. The de
 
 # Objectives and Methodology
 
-The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game. To make the model more accurate (and applicable) than just using the individual game stats, we want to consider the outcomes and statistics from previous games in which the team played.
+The objective of this vignette is to use a multitude of variables to predict binary win/loss outcomes of a game.
 
-To determine, which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a random forest model on the data. After making the model, we can evaluate its accuracy on the validation/test set and account for any issues that arise. Finally, this model can be used to make predictions.
+To determine which variables have strong correlations with game win, and thereby likely will serve as strong predictors, we will be conducting some exploratory data analysis. Then, we will train a random forest model on the data. After making the model, we can evaluate its accuracy on the test set and account for any issues that arise. We will also calculate variable importance scores to determine which predictors serve the largest roles in determining the prediction. This model is further developed by adding training controls.
 
 More information on why/how random forests were used can be found in their respective sections below.
 
@@ -128,11 +128,7 @@ games <- nflreadr::load_schedules(2021:2024)
 
 Sharpe's set, however, captures a lot of data we don't need, things like quarterback and coach name etc, and doesn't capture plenty of things we do care about, such as quantitative performance metrics. To solve this, we need to manipulate our play-by-play data to have single games as observations, scrape our new game-by-game data for our useful metrics, and then merge this data set with Sharpe's schedule data set. Once this is complete, we will have time series data where each time increment is one game. Breaking this down step-by-step, first load the play-by-play data, group it by game_id, and slice all but the last observation for that game.
 
-<<<<<<< Updated upstream
-```{r, eval=FALSE}
-=======
 ```{r}
->>>>>>> Stashed changes
 pbp <- load_pbp(2021:2024) 
 performances <- pbp %>% group_by(game_id) %>% slice_tail(n=1)
 ```
@@ -221,7 +217,7 @@ print(rf_model)
 ```
 
 
-As we can se by the model summary, the random forest is a good prediction model for this dataset. The confusion matrix presents extremely low error rates. This can be shown as most game outcomes were predicted correctly (all except 7).
+As we can see by the model summary, the random forest is a good prediction model for this dataset. The confusion matrix presents extremely low error rates. This can be shown as most game outcomes were predicted correctly (all except 7).
 
 #### Testing and Accuracy
 
@@ -240,7 +236,7 @@ conf_matrix <- confusionMatrix(
 print(conf_matrix)
 ```
 
-Again, the confusion matrix shows that most games were corectly predicted to be either win/loss (all except 4). This is reflected in the accuracy score which is .9661. The other statisticcs also support the conclusion that this is a solid model. 
+Again, the confusion matrix shows that most games were corectly predicted to be either win/loss (all except 4). This is reflected in the accuracy score which is .9661. The other statistics also support the conclusion that this is a solid model. 
 
 
 # Variable Importance Scores
@@ -336,6 +332,8 @@ varImp <- varImp(tuned_rf_model)
 plot(varImp, top = 20, main = "Top 20 Feature Importance (Random Forest)")
 ```
 
-# Final Thoughts
-
 # References/Further Resources
+[https://www.nflfastr.com/index.html](https://www.nflfastr.com/index.html)
+[https://nflreadr.nflverse.com/](https://nflreadr.nflverse.com/)
+[https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model](https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model)
+[www.nflfastr.com/articles/stats_variables.html](https://www.nflfastr.com/articles/stats_variables.html)
