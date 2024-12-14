@@ -234,18 +234,101 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exploratory-data-analysis" class="level1">
 <h1>Exploratory Data Analysis</h1>
+<p>Below is a graph displaying the teams that have the highest Offense EPA (Expected Points Added) and Defense EPA. Here we are looking for the teams in the top right quadrant of the graph which means that they have a negative Defense EPA (take points from their opponent) and a positive Offense EPA (add points to their own team). The top teams by this metric are the Bills, 49ers, Chiefs, and Eagles which were all really good teams during this time period.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>EPA <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">'RDS files/EPA_2024.rds'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>EPA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Another interesting component to look at is the type of stadium that the teams are playing in. Home teams are favored by both Vegas and their actual results when playing in a dome or outdoors. This advantage flips the other way for closed or open stadiums. For some reason, stadiums with retractable roofs make it less likely for their home team to take home a win.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>LV_vs_ACT <span class="ot">=</span> <span class="fu">readRDS</span>(<span class="st">'RDS files/LV_vs_Act.rds'</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>LV_vs_ACT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This following chart is attempting to see the strength of point differential on wins. With the chart, we can see that most teams that have a positive point differential go on to win 8 or more games. This would make sense as those teams are at least even in game or have a positive record. Some outliers from the positive side of win percentage drop down below 0 in the point differential category. This means that the relationship between number of wins and point differential is not 1-to-1.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ptdiff <span class="ot">=</span> <span class="fu">readRDS</span>(<span class="st">'RDS files/pt_diff.rds'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ptdiff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here is a graph about quarterback efficiency. Notice anything? Those same teams as before populate our top spots. Teams like the Chiefs, 49ers, Bills, and Eagles have the most efficient or near the most efficient quarterbacks in the entire league. This proves to be another good indicator of a teams overall success. Which is good quarterback play.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>QB_eff <span class="ot">=</span> <span class="fu">readRDS</span>(<span class="st">'RDS files/QB_efficiency.rds'</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>QB_eff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This final graph addresses the point totals at the end of games and whether or not the home team is favored based off of that. From the stacked bar chart we can see that the home team is always favored. However, for relatively low or high scoring point totals, that advantage drops slightly. Games that fall within the 38-49 point total typically favor the home team a little bit more than usual.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Total_wp <span class="ot">=</span> <span class="fu">readRDS</span>(<span class="st">'RDS files/Stacked_Total.rds'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Total_wp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Vignette_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
 <section id="preprocessing-time-series" class="level1">
 <h1>Preprocessing &amp; Time Series</h1>
 <section id="general-preprocessing" class="level4">
 <h4 class="anchored" data-anchor-id="general-preprocessing">General Preprocessing</h4>
-<p>NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (<a href="https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model" class="uri">https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model</a>). Sharpe’s set, however, captures a lot of data we don’t need, things like quarterback and coach name etc, and doesn’t capture plenty of things we do care about, such as quantitative performance metrics. To solve this,</p>
+<p>NFLFastR already has a pre built, schedule data frame which has each observation as a an NFL game. It was built by Lee Sharpe and is explained in this article (https://www.nflfastr.com/articles/beginners_guide.html#real-life-example-lets-make-a-win-total-model). To access this, we use the load_schedules function from NFLFastR.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> nflreadr<span class="sc">::</span><span class="fu">load_schedules</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Sharpe’s set, however, captures a lot of data we don’t need, things like quarterback and coach name etc, and doesn’t capture plenty of things we do care about, such as quantitative performance metrics. To solve this, we need to manipulate our play-by-play data to have single games as observations, scrape our new game-by-game data for our useful metrics, and then merge this data set with Sharpe’s schedule data set. Once this is complete, we will have time series data where each time increment is one game. Breaking this down step-by-step, first load the play-by-play data, group it by game_id, and slice all but the last observation for that game.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pbp <span class="ot">&lt;-</span> <span class="fu">load_pbp</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>) performances <span class="ot">&lt;-</span> pbp <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(game_id) <span class="sc">%&gt;%</span> <span class="fu">slice_tail</span>(<span class="at">n=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>At this point, our ‘performances’ data set is each game from the 2021-2024 seasons. Now, we will pull from ‘performances,’ the useful quantitative metrics we would like. Anything that says EPA means expected points added, and anything that says WPA means win percentage added.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>performances <span class="ot">&lt;-</span> performances <span class="sc">%&gt;%</span> <span class="fu">select</span>(game_id, total_home_epa, total_home_rush_epa, total_home_pass_epa, total_home_comp_air_epa, total_home_raw_air_epa, total_home_comp_yac_epa, total_home_comp_air_wpa, total_home_comp_yac_wpa, total_home_pass_wpa, total_home_raw_air_wpa, total_home_rush_wpa, total_home_raw_yac_epa, total_home_raw_yac_wpa, total_away_comp_air_epa, total_away_comp_air_wpa, total_away_comp_yac_epa, total_away_comp_yac_wpa, total_away_epa, total_away_pass_epa, total_away_pass_wpa, total_away_raw_air_epa, total_away_raw_air_wpa, total_away_raw_yac_epa, total_away_raw_yac_wpa, total_away_rush_epa, total_away_rush_wpa)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that are ‘performances’ data has everything we want, we will left merge it with the ‘games’ data (which is Sharpe’s original schedule set), and finally remove any unimportant predictors, such as names and unneeded ID’s.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(performances, <span class="at">by =</span> <span class="st">'game_id'</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>old_game_id, <span class="sc">-</span>nfl_detail_id, <span class="sc">-</span>pfr, <span class="sc">-</span>pff, <span class="sc">-</span>espn, <span class="sc">-</span>ftn, <span class="sc">-</span>away_qb_id, <span class="sc">-</span>home_qb_id, <span class="sc">-</span>away_qb_name, <span class="sc">-</span>home_qb_name, <span class="sc">-</span>away_coach, <span class="sc">-</span>home_coach, <span class="sc">-</span>referee, <span class="sc">-</span>stadium, <span class="sc">-</span>stadium_id, <span class="sc">-</span>location)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>games<span class="sc">$</span>home_win <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(games<span class="sc">$</span>result <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">1</span>,<span class="dv">0</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>games <span class="ot">&lt;-</span> games <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(home_team)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, we have our desired data set. ‘games’ now has each observation as a unique NFL game from the 2021-2024 seasons, with many quantitative measures and void of the non-important predictors.</p>
 </section>
-<section id="why-time-series" class="level4">
-<h4 class="anchored" data-anchor-id="why-time-series">Why Time Series?</h4>
-</section>
-<section id="time-series-preprocessing" class="level4">
-<h4 class="anchored" data-anchor-id="time-series-preprocessing">Time Series Preprocessing</h4>
+<section id="why-time-series" class="level3">
+<h3 class="anchored" data-anchor-id="why-time-series">Why Time Series?</h3>
+<p>NFL football is an extremely complex series of human interactions. Two big factors that surely contribute to team success, are momentum and confidence. Unfortunately, these are not metrics in the NFLFastR data set, however, what we can do is observe recent behavior in the form of time series data. By incrementing our data set by NFL games, we are able to capture the temporal dependencies between weeks of the NFL season. Also with our logistic regression model, we have the opportunity to use lagged variables, which use observations from previous time steps as predictors for our current prediction. This introduces further layers of complexity to our model that would be absent without time series data.</p>
 </section>
 </section>
 <section id="building-training-the-lstm-model" class="level1">

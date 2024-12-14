@@ -71,7 +71,6 @@ colSums(is.na(games))
 
 ```
 
-
 ```{r}
 # Split the dataset into training and testing sets
 set.seed(666)
@@ -135,7 +134,6 @@ importance <- importance(rf_model)
 importance_df <- as.data.frame(importance)
 ```
 
-
 ```{r}
 # Check column names
 colnames(importance_df)
@@ -176,7 +174,6 @@ head(importance_df)
 
 ```
 
-
 ```{r}
 # Limit the number of features to top 20 for better visibility
 top_features <- importance_df %>%
@@ -202,10 +199,6 @@ ggplot(top_features, aes(x = reorder(Feature, MeanDecreaseAccuracy), y = MeanDec
 
 ```
 
-
-
-
-
 ```{r}
 
 # Ensure x_train and x_test are data frames
@@ -223,7 +216,6 @@ y_test <- as.factor(y_test)
 
 ```
 
-
 ```{r}
 
 # Define training control
@@ -235,7 +227,6 @@ train_control <- trainControl(
 
 
 ```
-
 
 ```{r}
 # Check class of x_train_df
@@ -270,7 +261,6 @@ tuned_rf_model <- caret::train(
 
 ```
 
-
 ```{r}
 # Print tuned model results
 print(tuned_rf_model)
@@ -295,7 +285,6 @@ varImp <- varImp(tuned_rf_model)
 plot(varImp, top = 20, main = "Top 20 Feature Importance (Random Forest)")
 
 ```
-
 
 ```{r}
 # ## Logistic Regression
