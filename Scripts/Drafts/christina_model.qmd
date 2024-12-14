@@ -41,7 +41,34 @@ games <- games %>%
 ```
 
 ```{r}
-vis_miss(performances)
+vis_miss(games)
+```
+
+```{r}
+# Check for missing values in the entire dataset
+colSums(is.na(games))
+
+# Specifically check the `home_win` column
+sum(is.na(games$home_win))
+
+```
+
+```{r}
+# Remove Rows with Missing Values
+games <- games %>% drop_na()
+
+games <- games %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+
+games <- games %>%
+  mutate(across(where(is.factor), ~ ifelse(is.na(.), "Unknown", .)))
+
+```
+
+```{r}
+# Check for missing values again
+colSums(is.na(games))
+
 ```
 
 
